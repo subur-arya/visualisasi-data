@@ -305,6 +305,127 @@ st.markdown("""
         height: 1px;
         background: linear-gradient(90deg, transparent, #334155, transparent);
     }
+
+    /* DataFrame Container */
+    [data-testid="stDataFrame"] {
+        background-color: #1e293b !important;
+    }
+    
+    /* DataFrame Table */
+    [data-testid="stDataFrame"] > div {
+        background-color: #1e293b !important;
+    }
+    
+    /* Table Header */
+    [data-testid="stDataFrame"] thead tr th {
+        background-color: #0f172a !important;
+        color: #60a5fa !important;
+        font-weight: 600 !important;
+        border-bottom: 2px solid #334155 !important;
+        padding: 12px !important;
+    }
+    
+    /* Table Body Rows */
+    [data-testid="stDataFrame"] tbody tr {
+        background-color: #1e293b !important;
+        border-bottom: 1px solid #334155 !important;
+    }
+    
+    [data-testid="stDataFrame"] tbody tr:hover {
+        background-color: #334155 !important;
+    }
+    
+    /* Table Cells */
+    [data-testid="stDataFrame"] tbody tr td {
+        color: #e2e8f0 !important;
+        padding: 10px !important;
+        border-right: 1px solid #334155 !important;
+    }
+    
+    /* Index Column (paling kiri) */
+    [data-testid="stDataFrame"] tbody tr th {
+        background-color: #0f172a !important;
+        color: #94a3b8 !important;
+        font-weight: 600 !important;
+        border-right: 2px solid #334155 !important;
+    }
+    
+    /* Data Editor (editable table) */
+    [data-testid="stDataEditor"] {
+        background-color: #1e293b !important;
+    }
+    
+    [data-testid="stDataEditor"] div[data-testid="stDataFrameResizable"] {
+        background-color: #1e293b !important;
+    }
+    
+    /* Data Editor Header */
+    [data-testid="stDataEditor"] thead tr th {
+        background-color: #0f172a !important;
+        color: #60a5fa !important;
+        font-weight: 600 !important;
+        border-bottom: 2px solid #334155 !important;
+    }
+    
+    /* Data Editor Cells */
+    [data-testid="stDataEditor"] tbody tr td {
+        background-color: #1e293b !important;
+        color: #e2e8f0 !important;
+        border: 1px solid #334155 !important;
+    }
+    
+    [data-testid="stDataEditor"] tbody tr td:hover {
+        background-color: #334155 !important;
+    }
+    
+    /* Input dalam Data Editor */
+    [data-testid="stDataEditor"] input {
+        background-color: #0f172a !important;
+        color: #e2e8f0 !important;
+        border: 1px solid #3b82f6 !important;
+    }
+    
+    /* Scrollbar untuk tabel */
+    [data-testid="stDataFrame"] ::-webkit-scrollbar,
+    [data-testid="stDataEditor"] ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    [data-testid="stDataFrame"] ::-webkit-scrollbar-track,
+    [data-testid="stDataEditor"] ::-webkit-scrollbar-track {
+        background: #0f172a;
+        border-radius: 4px;
+    }
+    
+    [data-testid="stDataFrame"] ::-webkit-scrollbar-thumb,
+    [data-testid="stDataEditor"] ::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 4px;
+    }
+    
+    [data-testid="stDataFrame"] ::-webkit-scrollbar-thumb:hover,
+    [data-testid="stDataEditor"] ::-webkit-scrollbar-thumb:hover {
+        background: #3b82f6;
+    }
+    
+    /* Multi-Index Header (untuk kriteria) */
+    [data-testid="stDataFrame"] thead tr:first-child th {
+        background-color: #1e3a8a !important;
+        color: #93c5fd !important;
+    }
+    
+    [data-testid="stDataFrame"] thead tr:last-child th {
+        background-color: #0f172a !important;
+        color: #60a5fa !important;
+    }
+    
+    /* Column Config Number Input */
+    .stNumberInput > div > div > input {
+        background-color: #1e293b !important;
+        color: #e2e8f0 !important;
+        border: 1px solid #334155 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
