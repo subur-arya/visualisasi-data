@@ -10,11 +10,11 @@ from PIL import Image
 # 🔧 KONFIGURASI APLIKASI
 # ===============================
 st.set_page_config(
-    page_title="Aplikasi Simulasi Perhitungan Data Wilayah",
+    page_title="Aplikasi Simulasi Pengukuran Similaritas Kondisi Kekumuhan Wilayah",
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
-        'About': "Perhitungan data wilayah Madiun, Bojonegoro, Magetan"
+        'About': "Pengukuran similaritas kondisi kekumuhan wilayah kabupaten Madiun, Bojonegoro, Magetan"
     }
 )
 
@@ -392,6 +392,9 @@ def perhitungan_kriteria(dataA, dataB):
     """Calculate kriteria distance"""
     gabungan_miu = {}
     gabungan_v = {}
+
+    kelurahan = len(dataA['x1'])
+    kriteria = len(dataA)
     
     for i, valuesA in dataA.items():
         for j, valuesA_M in valuesA.items():
@@ -416,7 +419,7 @@ def perhitungan_kriteria(dataA, dataB):
             key = f'{i+1}|{j+1}'
             miu_sum = sum(gabungan_miu[key])
             v_sum = sum(gabungan_v[key])
-            hasil = (1 / 19) * (miu_sum + v_sum)
+            hasil = (1 / kriteria) * (miu_sum + v_sum)
             
             if i+1 not in baris:
                 baris[i+1] = []
@@ -432,7 +435,7 @@ def perhitungan_kriteria(dataA, dataB):
     hasil1 = sum(min_baris)
     hasil2 = sum(min_kolom)
     
-    return (1 / 24) * (hasil1 + hasil2)
+    return (1 / (4 * kelurahan)) * (hasil1 + hasil2)
 
 def perhitungan_kelurahan_custom(data):
     """Calculate custom kelurahan distance"""
@@ -457,11 +460,11 @@ def perhitungan_kelurahan_custom(data):
     
     return (1 / 4.6) * (min_a + min_b)
 
-def perhitungan_kriteria_custom(dataA, dataB):
+def perhitungan_kriteria_custom(dataA, dataB, kelurahan, kriteria):
     """Calculate custom kriteria distance"""
     gabungan_miu = {}
     gabungan_v = {}
-    
+
     for i, valuesA in dataA.iterrows():
         for j, valuesA_M in valuesA.items():
             for h in range(len(valuesA) // 2):
@@ -486,7 +489,7 @@ def perhitungan_kriteria_custom(dataA, dataB):
             key = f'M{i+1}|{j+1}'
             miu_sum = sum(gabungan_miu[key])
             v_sum = sum(gabungan_v[key])
-            hasil = (1 / 19) * (miu_sum + v_sum)
+            hasil = (1 / kriteria) * (miu_sum + v_sum)
             
             if i+1 not in baris:
                 baris[i+1] = []
@@ -502,7 +505,7 @@ def perhitungan_kriteria_custom(dataA, dataB):
     hasil1 = sum(min_baris)
     hasil2 = sum(min_kolom)
     
-    return (1 / 24) * (hasil1 + hasil2)
+    return (1 / (4 * kelurahan)) * (hasil1 + hasil2)
 
 # ===============================
 # 🏠 HALAMAN HOME
@@ -510,8 +513,8 @@ def perhitungan_kriteria_custom(dataA, dataB):
 if st.session_state.page == "home":
     st.markdown("""
         <div class="header-card">
-            <h1>Aplikasi Simulasi Perhitungan Data Wilayah</h1>
-            <p>Perhitungan data wilayah Madiun, Bojonegoro, Magetan</p>
+            <h1>Aplikasi Simulasi Pengukuran Similaritas<br>Kondisi Kekumuhan Wilayah</h1>
+            <p>Pengukuran similaritas kondisi kekumuhan wilayah kabupaten Madiun, Bojonegoro, Magetan</p>
         </div>
     """, unsafe_allow_html=True)
     
@@ -682,13 +685,57 @@ elif st.session_state.page == "excel":
                 hasil3 = (1 / 2) * (hasil1 + hasil2)
                 hasil4 = 1 - hasil3
                 
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Hasil 1", f"{hasil1:.4f}")
-                    st.metric("Hasil 3", f"{hasil3:.4f}")
-                with col2:
-                    st.metric("Hasil 2", f"{hasil2:.4f}")
-                    st.metric("Hasil 4", f"{hasil4:.4f}")
+                st.markdown(f"""
+                    <div style="
+                        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                        padding: 3rem 2rem;
+                        border-radius: 20px;
+                        text-align: center;
+                        box-shadow: 0 20px 60px rgba(59, 130, 246, 0.5);
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                        animation: fadeInUp 0.6s ease-out;
+                    ">
+                        <div style="
+                            font-size: 0.9rem;
+                            font-weight: 600;
+                            color: rgba(255, 255, 255, 0.9);
+                            text-transform: uppercase;
+                            letter-spacing: 2px;
+                            margin-bottom: 1rem;
+                        ">
+                            Nilai Kemiripan
+                        </div>
+                        <div style="
+                            font-size: 4rem;
+                            font-weight: 700;
+                            color: white;
+                            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                            margin-bottom: 0.5rem;
+                        ">
+                            {hasil4:.4f}
+                        </div>
+                        <div style="
+                            font-size: 1rem;
+                            color: rgba(255, 255, 255, 0.85);
+                            font-weight: 400;
+                        ">
+                            Tingkat similaritas kondisi kekumuhan wilayah
+                        </div>
+                    </div>
+                    
+                    <style>
+                        @keyframes fadeInUp {{
+                            from {{
+                                opacity: 0;
+                                transform: translateY(30px);
+                            }}
+                            to {{
+                                opacity: 1;
+                                transform: translateY(0);
+                            }}
+                        }}
+                    </style>
+                """, unsafe_allow_html=True)
         
         except Exception as e:
             st.error(f"Error: {str(e)}")
@@ -787,16 +834,61 @@ elif st.session_state.page == "custom":
     
     if st.button("Hitung dengan Rumus", use_container_width=True):
         hasil1 = perhitungan_kelurahan_custom(edited_data_A)
-        hasil2 = perhitungan_kriteria_custom(edited_data_B, edited_data_C)
+        hasil2 = perhitungan_kriteria_custom(edited_data_B, edited_data_C, kelurahan, kriteria)
         hasil3 = (1 / 2) * (hasil1 + hasil2)
         hasil4 = 1 - hasil3
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Hasil 1", f"{hasil1:.4f}")
-            st.metric("Hasil 3", f"{hasil3:.4f}")
-        with col2:
-            st.metric("Hasil 2", f"{hasil2:.4f}")
-            st.metric("Hasil 4", f"{hasil4:.4f}")
+        # Modern Result Card
+        st.markdown(f"""
+            <div style="
+                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                padding: 3rem 2rem;
+                border-radius: 20px;
+                text-align: center;
+                box-shadow: 0 20px 60px rgba(59, 130, 246, 0.5);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                animation: fadeInUp 0.6s ease-out;
+            ">
+                <div style="
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    color: rgba(255, 255, 255, 0.9);
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                    margin-bottom: 1rem;
+                ">
+                    Nilai Kemiripan
+                </div>
+                <div style="
+                    font-size: 4rem;
+                    font-weight: 700;
+                    color: white;
+                    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                    margin-bottom: 0.5rem;
+                ">
+                    {hasil4:.4f}
+                </div>
+                <div style="
+                    font-size: 1rem;
+                    color: rgba(255, 255, 255, 0.85);
+                    font-weight: 400;
+                ">
+                    Tingkat similaritas kondisi kekumuhan wilayah
+                </div>
+            </div>
+            
+            <style>
+                @keyframes fadeInUp {{
+                    from {{
+                        opacity: 0;
+                        transform: translateY(30px);
+                    }}
+                    to {{
+                        opacity: 1;
+                        transform: translateY(0);
+                    }}
+                }}
+            </style>
+        """, unsafe_allow_html=True)
