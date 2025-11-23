@@ -966,11 +966,11 @@ elif st.session_state.page == "excel":
                 
                 st.markdown("<br>", unsafe_allow_html=True)
                 data = load_kabupaten_data(uploaded_file, "konv kelurahan")
-                st.markdown(
-                    render_dark_dataframe(data[kabupaten.upper()]),
-                    unsafe_allow_html=True
-                )
-                # st.dataframe(create_dark_dataframe(data[kabupaten.upper()]), use_container_width=True)
+                # st.markdown(
+                #     render_dark_dataframe(data[kabupaten.upper()]),
+                #     unsafe_allow_html=True
+                # )
+                st.dataframe(data[kabupaten.upper()], use_container_width=True)
             
             with tab2:
                 st.markdown("### Pilih Kabupaten")
@@ -990,11 +990,11 @@ elif st.session_state.page == "excel":
                 konv_kab = konv_map[kabupaten]
                 data = load_kriteria_data(uploaded_file, konv_kab)
                 data_tampil = dict_kriteria_to_multiindex_df(data)
-                st.markdown(
-                    render_dark_dataframe(data_tampil),
-                    unsafe_allow_html=True
-                )
-                # st.dataframe(create_dark_dataframe(data_tampil), use_container_width=True)
+                # st.markdown(
+                #     render_dark_dataframe(data_tampil),
+                #     unsafe_allow_html=True
+                # )
+                st.dataframe(data_tampil, use_container_width=True)
             
             st.markdown("<br>", unsafe_allow_html=True)
             
