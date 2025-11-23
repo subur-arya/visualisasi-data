@@ -43,6 +43,7 @@ st.markdown("""
 # ===============================
 st.markdown("""
 <style>
+    
 
     /* FORCE DARK MODE - Override semua tema */
     [data-testid="stAppViewContainer"] {
@@ -198,7 +199,7 @@ st.markdown("""
     .stNumberInput > div > div > input:focus,
     .stSelectbox > div > div:focus {
         border-color: #3b82f6;
-        box-shadow: 0 0 0 1px #3b82f6;
+        box-shadow: 0 0 0 1px #3b82f6;      
     }
     
     /* Slider Container */
@@ -675,6 +676,167 @@ def perhitungan_kriteria_custom(dataA, dataB, kelurahan, kriteria):
     
     return (1 / (4 * kelurahan)) * (hasil1 + hasil2)
 
+def render_dark_dataframe(df, show_index=True, index_width="auto"):
+    """Render DataFrame sebagai HTML table dengan dark theme"""
+    
+    # Cek apakah MultiIndex
+    is_multiindex = isinstance(df.columns, pd.MultiIndex)
+    
+    # Auto-detect index width berdasarkan konten
+    if index_width == "auto":
+        max_len = max(len(str(idx)) for idx in df.index)
+        if max_len <= 3:
+            index_width = "60px"
+        elif max_len <= 10:
+            index_width = "100px"
+        else:
+            index_width = "150px"
+    
+    html = f"""
+    <style>
+        .dark-table-container {{
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            overflow-x: auto;
+            margin: 1rem 0;
+        }}
+        
+        .dark-table {{
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #1e293b;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }}
+        
+        .dark-table thead tr th {{
+            background-color: #0f172a;
+            color: #60a5fa;
+            font-weight: 600;
+            padding: 14px 12px;
+            text-align: center;
+            border: 1px solid #334155;
+            font-size: 14px;
+        }}
+        
+        .dark-table thead tr:first-child th {{
+            background-color: #1e3a8a;
+            color: #93c5fd;
+            font-weight: 700;
+            font-size: 15px;
+        }}
+        
+        .dark-table tbody tr th {{
+            background-color: #0f172a;
+            color: #94a3b8;
+            font-weight: 600;
+            padding: 12px;
+            text-align: center;              /* UBAH DARI left KE center */
+            border: 1px solid #334155;
+            width: {index_width};
+            max-width: {index_width};
+            min-width: 60px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }}
+        
+        .dark-table tbody tr td {{
+            background-color: #1e293b;
+            color: #e2e8f0;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #334155;
+            font-size: 14px;
+        }}
+        
+        .dark-table tbody tr:hover td {{
+            background-color: #334155;
+            color: #ffffff;
+            transition: all 0.2s ease;
+        }}
+        
+        .dark-table tbody tr:hover th {{
+            background-color: #1e3a8a;
+            color: #93c5fd;
+            transition: all 0.2s ease;
+        }}
+    </style>
+    
+    <div class="dark-table-container">
+        <table class="dark-table">
+    """
+    
+    # === HEADER ===
+    html += "<thead>"
+    
+    if is_multiindex:
+        # MultiIndex Header - Level 0
+        html += "<tr>"
+        if show_index:
+            html += '<th rowspan="2"></th>'  # Empty cell for index
+        
+        for col in df.columns.get_level_values(0).unique():
+            # Hitung berapa kolom yang di-span
+            span_count = sum(1 for c in df.columns if c[0] == col)
+            html += f'<th colspan="{span_count}">{col}</th>'
+        html += "</tr>"
+        
+        # MultiIndex Header - Level 1
+        html += "<tr>"
+        for col in df.columns:
+            html += f'<th>{col[1]}</th>'
+        html += "</tr>"
+    else:
+        # Single Header
+        html += "<tr>"
+        if show_index:
+            html += "<th>Index</th>"
+        for col in df.columns:
+            html += f"<th>{col}</th>"
+        html += "</tr>"
+    
+    html += "</thead>"
+    
+    # === BODY ===
+    html += "<tbody>"
+    
+    for idx, row in df.iterrows():
+        html += "<tr>"
+        
+        # Index column
+        if show_index:
+            html += f"<th>{idx}</th>"
+        
+        # Data columns
+        for val in row:
+            # Format number
+            if isinstance(val, (int, float)):
+                if pd.isna(val):
+                    display_val = "-"
+                elif isinstance(val, float):
+                    display_val = f"{val:.2f}"
+                else:
+                    display_val = str(val)
+            else:
+                display_val = str(val)
+            
+            html += f"<td>{display_val}</td>"
+        
+        html += "</tr>"
+    
+    html += "</tbody>"
+    html += "</table>"
+    html += "</div>"
+    
+    return html
+
+
+
 # ===============================
 # 🏠 HALAMAN HOME
 # ===============================
@@ -804,7 +966,11 @@ elif st.session_state.page == "excel":
                 
                 st.markdown("<br>", unsafe_allow_html=True)
                 data = load_kabupaten_data(uploaded_file, "konv kelurahan")
-                st.dataframe(data[kabupaten.upper()], use_container_width=True)
+                st.markdown(
+                    render_dark_dataframe(data[kabupaten.upper()]),
+                    unsafe_allow_html=True
+                )
+                # st.dataframe(create_dark_dataframe(data[kabupaten.upper()]), use_container_width=True)
             
             with tab2:
                 st.markdown("### Pilih Kabupaten")
@@ -824,7 +990,11 @@ elif st.session_state.page == "excel":
                 konv_kab = konv_map[kabupaten]
                 data = load_kriteria_data(uploaded_file, konv_kab)
                 data_tampil = dict_kriteria_to_multiindex_df(data)
-                st.dataframe(data_tampil, use_container_width=True)
+                st.markdown(
+                    render_dark_dataframe(data_tampil),
+                    unsafe_allow_html=True
+                )
+                # st.dataframe(create_dark_dataframe(data_tampil), use_container_width=True)
             
             st.markdown("<br>", unsafe_allow_html=True)
             
@@ -934,6 +1104,46 @@ elif st.session_state.page == "custom":
             <h3 style="color: #60a5fa;">Input Data Sesuai Kebutuhan</h3>
         </div>
     """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <style>
+    /* Mengubah background kotak input */
+    div[data-baseweb="input"] > div {
+        background-color: #2a2a2a !important;
+        border: 1px solid #555 !important;
+        border-color : #2a2a2a !important;
+    }
+
+    /* Mengubah warna teks label */
+    label {
+        color: #f0f0f0 !important;
+        font-weight: bold;
+    }
+
+    /* Mengubah warna teks dalam input */
+    input {
+        color: white !important;
+    }
+
+
+    .stNumberInput button {
+        background-color: #334155 !important;
+        color: #2a2a2a !important;
+        border: 1px solid #475569 !important;
+    }
+    
+    .stNumberInput button:hover {
+        background-color: #3b82f6 !important;
+        border-color: #3b82f6 !important;
+    }
+
+    .stNumberInput > label {
+        color: #2a2a2a !important;
+        font-weight: 600 !important;
+    }
+    
+    </style>
+    """, unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     with col1:
@@ -975,7 +1185,8 @@ elif st.session_state.page == "custom":
     edited_data_A = st.data_editor(
         df_A,
         key="table_A",
-        use_container_width=True
+        use_container_width=True,
+        hide_index=False
     )
     
     st.markdown("<br>", unsafe_allow_html=True)
@@ -985,7 +1196,8 @@ elif st.session_state.page == "custom":
         df_B,
         key="table_B",
         column_config=column_config,
-        use_container_width=True
+        use_container_width=True,
+        hide_index=False
     )
     
     st.markdown("<br>", unsafe_allow_html=True)
@@ -995,7 +1207,8 @@ elif st.session_state.page == "custom":
         df_C,
         key="table_C",
         column_config=column_config,
-        use_container_width=True
+        use_container_width=True,
+        hide_index=False
     )
     
     st.markdown("<br>", unsafe_allow_html=True)
