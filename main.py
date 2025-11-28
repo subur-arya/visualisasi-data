@@ -606,14 +606,14 @@ def perhitungan_kriteria(dataA, dataB):
     
     return (1 / (4 * kelurahan)) * (hasil1 + hasil2)
 
-def perhitungan_kelurahan_custom(data):
+def perhitungan_kelurahan_custom(data1, data2):
     """Calculate custom kelurahan distance"""
     baris = {}
     kolom = {}
     
-    for a, valuesa in data.iterrows():
+    for a, valuesa in data1.iterrows():
         row_results = []
-        for b, valuesb in data.iterrows():
+        for b, valuesb in data2.iterrows():
             hasil = abs(valuesa['miu Kabupaten 1'] - valuesb["miu Kabupaten 2"]) + \
                     abs(valuesa["v Kabupaten 1"] - valuesb["v Kabupaten 2"])
             row_results.append(hasil)
@@ -952,73 +952,87 @@ elif st.session_state.page == "excel":
     
     if uploaded_file.exists():
         try:
+            # Inisialisasi session state untuk selectbox jika belum ada
+            if 'kabupaten1' not in st.session_state:
+                st.session_state.kabupaten1 = 'MADIUN'
+            if 'kabupaten2' not in st.session_state:
+                st.session_state.kabupaten2 = 'MADIUN'
+            
+            # Selectbox di luar tab untuk sinkronisasi
+            col1, col2 = st.columns(2)
+            with col1:
+                st.session_state.kabupaten1 = st.selectbox(
+                    "Pilih Kabupaten 1", 
+                    ['MADIUN', 'BOJONEGORO', 'MAGETAN'], 
+                    key="select_kab1",
+                    index=['MADIUN', 'BOJONEGORO', 'MAGETAN'].index(st.session_state.kabupaten1)
+                )
+            with col2:
+                st.session_state.kabupaten2 = st.selectbox(
+                    "Pilih Kabupaten 2", 
+                    ['MADIUN', 'BOJONEGORO', 'MAGETAN'], 
+                    key="select_kab2",
+                    index=['MADIUN', 'BOJONEGORO', 'MAGETAN'].index(st.session_state.kabupaten2)
+                )
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
             # Tab untuk Jenis Data
             tab1, tab2 = st.tabs(["Data Kelurahan", "Data Kriteria"])
             
             with tab1:
-                st.markdown("### Pilih Kabupaten")
-                kabupaten = st.radio(
-                    "kabupaten_kelurahan",
-                    ["Madiun", "Bojonegoro", "Magetan"],
-                    horizontal=True,
-                    label_visibility="collapsed"
-                )
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    data = load_kabupaten_data(uploaded_file, "konv kelurahan")
+                    st.dataframe(data[st.session_state.kabupaten1.upper()], use_container_width=True)
+                with col2:
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    data = load_kabupaten_data(uploaded_file, "konv kelurahan")
+                    st.dataframe(data[st.session_state.kabupaten2.upper()], use_container_width=True)
                 
-                st.markdown("<br>", unsafe_allow_html=True)
-                data = load_kabupaten_data(uploaded_file, "konv kelurahan")
-                # st.markdown(
-                #     render_dark_dataframe(data[kabupaten.upper()]),
-                #     unsafe_allow_html=True
-                # )
-                st.dataframe(data[kabupaten.upper()], use_container_width=True)
-            
             with tab2:
-                st.markdown("### Pilih Kabupaten")
-                kabupaten = st.radio(
-                    "kabupaten_kriteria",
-                    ["Madiun", "Bojonegoro", "Magetan"],
-                    horizontal=True,
-                    label_visibility="collapsed"
-                )
-                
-                st.markdown("<br>", unsafe_allow_html=True)
-                konv_map = {
-                    'Madiun': 'konv mdiun',
-                    'Bojonegoro': 'konv bjngr',
-                    'Magetan': 'konv mgtn'
-                }
-                konv_kab = konv_map[kabupaten]
-                data = load_kriteria_data(uploaded_file, konv_kab)
-                data_tampil = dict_kriteria_to_multiindex_df(data)
-                # st.markdown(
-                #     render_dark_dataframe(data_tampil),
-                #     unsafe_allow_html=True
-                # )
-                st.dataframe(data_tampil, use_container_width=True)
-            
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                kabupaten1 = st.selectbox("Pilih Kabupaten 1", ['MADIUN', 'BOJONEGORO', 'MAGETAN'])
-            with col2:
-                kabupaten2 = st.selectbox("Pilih Kabupaten 2", ['MADIUN', 'BOJONEGORO', 'MAGETAN'])
-            
-            if st.button("Hitung dengan Rumus", use_container_width=True):
                 konv_map = {
                     'MADIUN': 'konv mdiun',
                     'BOJONEGORO': 'konv bjngr',
                     'MAGETAN': 'konv mgtn'
                 }
                 
-                konv_kab1 = konv_map[kabupaten1]
-                konv_kab2 = konv_map[kabupaten2]
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    konv_kab1 = konv_map[st.session_state.kabupaten1]
+                    data1 = load_kriteria_data(uploaded_file, konv_kab1)
+                    data_tampil1 = dict_kriteria_to_multiindex_df(data1)
+                    st.dataframe(data_tampil1, use_container_width=True)
+                with col2:
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    konv_kab2 = konv_map[st.session_state.kabupaten2]
+                    data2 = load_kriteria_data(uploaded_file, konv_kab2)
+                    data_tampil2 = dict_kriteria_to_multiindex_df(data2)
+                    st.dataframe(data_tampil2, use_container_width=True)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            if st.button("Hitung dengan Rumus", use_container_width=True):
+
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+
+                konv_map = {
+                    'MADIUN': 'konv mdiun',
+                    'BOJONEGORO': 'konv bjngr',
+                    'MAGETAN': 'konv mgtn'
+                }
+                
+                konv_kab1 = konv_map[st.session_state.kabupaten1]
+                konv_kab2 = konv_map[st.session_state.kabupaten2]
                 
                 data = load_kabupaten_data(uploaded_file, "konv kelurahan")
                 dataA = load_kriteria_data(uploaded_file, konv_kab1)
                 dataB = load_kriteria_data(uploaded_file, konv_kab2)
                 
-                hasil1 = perhitungan_kelurahan(data, kabupaten1, kabupaten2)
+                hasil1 = perhitungan_kelurahan(data, st.session_state.kabupaten1, st.session_state.kabupaten2)
                 hasil2 = perhitungan_kriteria(dataA, dataB)
                 hasil3 = (1 / 2) * (hasil1 + hasil2)
                 hasil4 = 1 - hasil3
@@ -1152,9 +1166,15 @@ elif st.session_state.page == "custom":
         kriteria = st.number_input("Jumlah Kriteria:", min_value=1, max_value=30, value=4)
     
     # Dataset A - Kelurahan
-    df_A = pd.DataFrame(
-        np.zeros((kelurahan, 4)),
-        columns=["miu Kabupaten 1", "v Kabupaten 1", "miu Kabupaten 2", "v Kabupaten 2"],
+    df_A1 = pd.DataFrame(
+        np.zeros((kelurahan, 2)),
+        columns=["miu Kabupaten 1", "v Kabupaten 1"],
+        index=[f"A{i+1}" for i in range(kelurahan)]
+    )
+
+    df_A2 = pd.DataFrame(
+        np.zeros((kelurahan, 2)),
+        columns=["miu Kabupaten 2", "v Kabupaten 2"],
         index=[f"M{i+1}" for i in range(kelurahan)]
     )
     
@@ -1182,12 +1202,21 @@ elif st.session_state.page == "custom":
     }
     
     st.subheader("Data Kelurahan")
-    edited_data_A = st.data_editor(
-        df_A,
-        key="table_A",
-        use_container_width=True,
-        hide_index=False
-    )
+    col1, col2 = st.columns(2)
+    with col1:
+        edited_data_A1 = st.data_editor(
+            df_A1,
+            key="table_A1",
+            use_container_width=True,
+            hide_index=False
+        )
+    with col2:
+        edited_data_A2 = st.data_editor(
+            df_A2,
+            key="table_A2",
+            use_container_width=True,
+            hide_index=False
+        )
     
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -1214,7 +1243,7 @@ elif st.session_state.page == "custom":
     st.markdown("<br>", unsafe_allow_html=True)
     
     if st.button("Hitung dengan Rumus", use_container_width=True):
-        hasil1 = perhitungan_kelurahan_custom(edited_data_A)
+        hasil1 = perhitungan_kelurahan_custom(edited_data_A1, edited_data_A2)
         hasil2 = perhitungan_kriteria_custom(edited_data_B, edited_data_C, kelurahan, kriteria)
         hasil3 = (1 / 2) * (hasil1 + hasil2)
         hasil4 = 1 - hasil3
