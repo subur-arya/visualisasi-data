@@ -605,42 +605,56 @@ def perhitungan_kriteria(dataA, dataB):
 
     kelurahan = len(dataA['x1'])
     kriteria = len(dataA)
+
+    print("data a :", dataA, "\n\n\n")
+    print("data b :", dataB, "\n\n\n")
+
+    list_kelurahan_a = []
+    for m in next(iter(dataA.items()))[1]:
+        list_kelurahan_a.append(m)
+    print(list_kelurahan_a)
+
+    list_kelurahan_b = []
+    for m in next(iter(dataB.items()))[1]:
+        list_kelurahan_b.append(m)
+    print(list_kelurahan_b)
     
     for i, valuesA in dataA.items():
         for j, valuesA_M in valuesA.items():
             for h in range(len(valuesA)):
-                derajat_keanggotaan = abs(valuesA_M['derajat keanggotaan'] - dataB[i][f'M{h+1}']['derajat keanggotaan'])
-                derajat_nonkeanggotaan = abs(valuesA_M['derajat nonkeanggotaan'] - dataB[i][f'M{h+1}']['derajat nonkeanggotaan'])
-                key = f'{j[1:]}|{h+1}'
-                
+                derajat_keanggotaan = abs(valuesA_M['derajat keanggotaan'] - dataB[i][list_kelurahan_b[h]]['derajat keanggotaan'])
+                derajat_nonkeanggotaan = abs(valuesA_M['derajat nonkeanggotaan'] - dataB[i][list_kelurahan_b[h]]['derajat nonkeanggotaan'])
+                key = f'{j}|{list_kelurahan_b[h]}'
+                print("key : ", key)
+                  
                 if key not in gabungan_derajat_keanggotaan:
                     gabungan_derajat_keanggotaan[key] = []
                     gabungan_derajat_nonkeanggotaan[key] = []
                 
                 gabungan_derajat_keanggotaan[key].append(derajat_keanggotaan)
                 gabungan_derajat_nonkeanggotaan[key].append(derajat_nonkeanggotaan)
-    
-    ukuran = int(np.sqrt(len(gabungan_derajat_keanggotaan)))
     baris = {}
     kolom = {}
     
-    for i in range(ukuran):
-        for j in range(ukuran):
-            key = f'{i+1}|{j+1}'
+    for i in list_kelurahan_a:
+        for j in list_kelurahan_b:
+            key = f'{i}|{j}'
+            # print(key)
+            print(kriteria)
             derajat_keanggotaan_sum = sum(gabungan_derajat_keanggotaan[key])
             derajat_nonkeanggotaan_sum = sum(gabungan_derajat_nonkeanggotaan[key])
             hasil = (1 / kriteria) * (derajat_keanggotaan_sum + derajat_nonkeanggotaan_sum)
             
-            if i+1 not in baris:
-                baris[i+1] = []
-            if j+1 not in kolom:
-                kolom[j+1] = []
+            if i not in baris:
+                baris[i] = []
+            if j not in kolom:
+                kolom[j] = []
             
-            baris[i+1].append(hasil)
-            kolom[j+1].append(hasil)
+            baris[i].append(hasil)
+            kolom[j].append(hasil)
     
-    min_baris = [min(baris[i+1]) for i in range(ukuran)]
-    min_kolom = [min(kolom[j+1]) for j in range(ukuran)]
+    min_baris = [min(v) for v in baris.values()]
+    min_kolom = [min(v) for v in kolom.values()]
     
     hasil1 = sum(min_baris)
     hasil2 = sum(min_kolom)
@@ -677,11 +691,14 @@ def perhitungan_kriteria_custom(dataA, dataB, kelurahan, kriteria):
 
     for i, valuesA in dataA.iterrows():
         for j, valuesA_M in valuesA.items():
-            for h in range(len(valuesA) // 2):
-                hasil = abs(valuesA_M - dataB.loc[i, f"{j.split(' ')[0]} M{h+1}"])
-                key = f"{j.split(' ')[1]}|{h+1}"
+            for h in range(len(valuesA)):
+                hasil = abs(valuesA_M - dataB.loc[f"b{h+1}", f"{j}"])
+                key = f"{j}|{h+1}"
+
+                print("hasil :", f"b{h+1}")
+                print("key :", key)
                 
-                if j.split(" ")[0] == "derajat keanggotaan":
+                if j == "derajat keanggotaan":
                     if key not in gabungan_derajat_keanggotaan:
                         gabungan_derajat_keanggotaan[key] = []
                     gabungan_derajat_keanggotaan[key].append(hasil)
