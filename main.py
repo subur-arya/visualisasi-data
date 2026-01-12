@@ -559,8 +559,6 @@ def load_kriteria_data(path, sheet_name):
     tuples = list(zip(header_row1, header_row2))
     df.columns = pd.MultiIndex.from_tuples(tuples)
     df = df.iloc[2:].reset_index(drop=True)
-
-    print(kelurahan_list)
     
     result = {}
     for _, row in df.iterrows():
@@ -606,26 +604,20 @@ def perhitungan_kriteria(dataA, dataB):
     kelurahan = len(dataA['x1'])
     kriteria = len(dataA)
 
-    print("data a :", dataA, "\n\n\n")
-    print("data b :", dataB, "\n\n\n")
-
     list_kelurahan_a = []
     for m in next(iter(dataA.items()))[1]:
         list_kelurahan_a.append(m)
-    print(list_kelurahan_a)
 
     list_kelurahan_b = []
     for m in next(iter(dataB.items()))[1]:
         list_kelurahan_b.append(m)
-    print(list_kelurahan_b)
     
     for i, valuesA in dataA.items():
         for j, valuesA_M in valuesA.items():
             for h in range(len(valuesA)):
                 derajat_keanggotaan = abs(valuesA_M['derajat keanggotaan'] - dataB[i][list_kelurahan_b[h]]['derajat keanggotaan'])
                 derajat_nonkeanggotaan = abs(valuesA_M['derajat nonkeanggotaan'] - dataB[i][list_kelurahan_b[h]]['derajat nonkeanggotaan'])
-                key = f'{j}|{list_kelurahan_b[h]}'
-                print("key : ", key)
+                key = f'{j}|{list_kelurahan_b[h]}
                   
                 if key not in gabungan_derajat_keanggotaan:
                     gabungan_derajat_keanggotaan[key] = []
@@ -639,8 +631,6 @@ def perhitungan_kriteria(dataA, dataB):
     for i in list_kelurahan_a:
         for j in list_kelurahan_b:
             key = f'{i}|{j}'
-            # print(key)
-            print(kriteria)
             derajat_keanggotaan_sum = sum(gabungan_derajat_keanggotaan[key])
             derajat_nonkeanggotaan_sum = sum(gabungan_derajat_nonkeanggotaan[key])
             hasil = (1 / kriteria) * (derajat_keanggotaan_sum + derajat_nonkeanggotaan_sum)
@@ -694,9 +684,6 @@ def perhitungan_kriteria_custom(dataA, dataB, kelurahan, kriteria):
             for h in range(len(valuesA)):
                 hasil = abs(valuesA_M - dataB.loc[f"b{h+1}", f"{j}"])
                 key = f"{j}|{h+1}"
-
-                print("hasil :", f"b{h+1}")
-                print("key :", key)
                 
                 if j == "derajat keanggotaan":
                     if key not in gabungan_derajat_keanggotaan:
