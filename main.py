@@ -467,30 +467,30 @@ def image_to_base64(image_path):
 def dict_kriteria_to_multiindex_df(data, posisi="kiri"):
     """Convert kriteria dict to MultiIndex DataFrame"""
     list_M = list(next(iter(data.values())).keys())
-    
-    tuples = []
-    if posisi == "kiri":
-        # gunakan nama kriteria asli
-        for kriteria in data.keys():
-            tuples.append((kriteria, "derajat keanggotaan"))
-            tuples.append((kriteria, "derajat nonkeanggotaan"))
 
+    tuples = []
+
+    if posisi == "kiri":
+        kolom_labels = list(data.keys())
     elif posisi == "kanan":
-        # gunakan b1, b2, b3, ...
-        for i in range(len(data)):
-            b = f"b{i+1}"
-            tuples.append((b, "derajat keanggotaan"))
-            tuples.append((b, "derajat nonkeanggotaan"))
-    
+        kolom_labels = [f"b{i+1}" for i in range(len(data))]
+    else:
+        raise ValueError("posisi harus 'kiri' atau 'kanan'")
+
+    for label in kolom_labels:
+        tuples.append((label, "derajat keanggotaan"))
+        tuples.append((label, "derajat nonkeanggotaan"))
+
     columns = pd.MultiIndex.from_tuples(tuples, names=["KRITERIA", "NILAI"])
     df = pd.DataFrame(index=list_M, columns=columns)
-    
-    for kriteria, nilai_M in data.items():
+
+    for label, (_, nilai_M) in zip(kolom_labels, data.items()):
         for M, nilai in nilai_M.items():
-            df.loc[M, (kriteria, "derajat keanggotaan")] = nilai["derajat keanggotaan"]
-            df.loc[M, (kriteria, "derajat nonkeanggotaan")] = nilai["derajat nonkeanggotaan"]
-    
+            df.loc[M, (label, "derajat keanggotaan")] = nilai["derajat keanggotaan"]
+            df.loc[M, (label, "derajat nonkeanggotaan")] = nilai["derajat nonkeanggotaan"]
+
     return df
+
 
 def load_kabupaten_data(uploaded_file, sheet_name):
     """Load kabupaten data from Excel"""
