@@ -1057,7 +1057,7 @@ elif st.session_state.page == "excel":
                     st.markdown("<br>", unsafe_allow_html=True)
                     konv_kab2 = konv_map[st.session_state.kabupaten2]
                     data2 = load_kriteria_data(uploaded_file, konv_kab2)
-                    data_tampil2 = dict_kriteria_to_multiindex_df(data2, "kanan")
+                    data_tampil2 = dict_kriteria_to_multiindex_df(data2)
                     st.dataframe(data_tampil2, use_container_width=True)
 
             st.markdown("<br>", unsafe_allow_html=True)
