@@ -617,7 +617,7 @@ def perhitungan_kriteria(dataA, dataB):
             for h in range(len(valuesA)):
                 derajat_keanggotaan = abs(valuesA_M['derajat keanggotaan'] - dataB[i][list_kelurahan_b[h]]['derajat keanggotaan'])
                 derajat_nonkeanggotaan = abs(valuesA_M['derajat nonkeanggotaan'] - dataB[i][list_kelurahan_b[h]]['derajat nonkeanggotaan'])
-                key = f'{j}|{list_kelurahan_b[h]}
+                key = f'{j}|{list_kelurahan_b[h]}'
                   
                 if key not in gabungan_derajat_keanggotaan:
                     gabungan_derajat_keanggotaan[key] = []
