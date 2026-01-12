@@ -464,22 +464,31 @@ def image_to_base64(image_path):
         st.error(f"Error loading {image_path.name}: {str(e)}")
         return None
 
-def dict_kriteria_to_multiindex_df(data):
+def dict_kriteria_to_multiindex_df(data, posisi="kiri"):
     """Convert kriteria dict to MultiIndex DataFrame"""
     list_M = list(next(iter(data.values())).keys())
     
     tuples = []
-    for kriteria in data.keys():
-        tuples.append((kriteria, "miu"))
-        tuples.append((kriteria, "v"))
+    if posisi == "kiri":
+        # gunakan nama kriteria asli
+        for kriteria in data.keys():
+            tuples.append((kriteria, "derajat keanggotaan"))
+            tuples.append((kriteria, "derajat nonkeanggotaan"))
+
+    elif posisi == "kanan":
+        # gunakan b1, b2, b3, ...
+        for i in range(len(data)):
+            b = f"b{i+1}"
+            tuples.append((b, "derajat keanggotaan"))
+            tuples.append((b, "derajat nonkeanggotaan"))
     
     columns = pd.MultiIndex.from_tuples(tuples, names=["KRITERIA", "NILAI"])
     df = pd.DataFrame(index=list_M, columns=columns)
     
     for kriteria, nilai_M in data.items():
         for M, nilai in nilai_M.items():
-            df.loc[M, (kriteria, "miu")] = nilai["miu"]
-            df.loc[M, (kriteria, "v")] = nilai["v"]
+            df.loc[M, (kriteria, "derajat keanggotaan")] = nilai["derajat keanggotaan"]
+            df.loc[M, (kriteria, "derajat nonkeanggotaan")] = nilai["derajat nonkeanggotaan"]
     
     return df
 
@@ -491,11 +500,11 @@ def load_kabupaten_data(uploaded_file, sheet_name):
     collected_rows = []
     
     for idx, row in df_raw.iterrows():
-        if isinstance(row[0], str) and row[0].isupper() and row[0] not in ["Kelurahan", "miu", "v"]:
+        if isinstance(row[0], str) and row[0].isupper() and row[0] not in ["Kelurahan", "derajat keanggotaan", "derajat nonkeanggotaan"]:
             if current_kabupaten and collected_rows:
                 data_dict[current_kabupaten] = pd.DataFrame(
                     collected_rows,
-                    columns=["Kelurahan", "miu", "v"]
+                    columns=["Kelurahan", "derajat keanggotaan", "derajat nonkeanggotaan"]
                 )
             current_kabupaten = row[0].strip()
             collected_rows = []
@@ -506,13 +515,43 @@ def load_kabupaten_data(uploaded_file, sheet_name):
     if current_kabupaten and collected_rows:
         data_dict[current_kabupaten] = pd.DataFrame(
             collected_rows,
-            columns=["Kelurahan", "miu", "v"]
+            columns=["Kelurahan", "derajat keanggotaan", "derajat nonkeanggotaan"]
         )
     
     return data_dict
 
 def load_kriteria_data(path, sheet_name):
     """Load kriteria data from Excel"""
+    df_kelurahan = pd.read_excel(path, sheet_name="konv kelurahan", header=None)
+    match sheet_name:
+        case "konv mgtn":
+            target_kabupaten = "MAGETAN"
+        case "konv bjngr":
+            target_kabupaten = "BOJONEGORO"
+        case "konv mdiun":
+            target_kabupaten = "MADIUN"
+    
+    
+    # target_kabupaten = "KABUPATEN BANDUNG"
+    kelurahan_list = []
+    current_kabupaten = None
+
+    for idx, row in df_kelurahan.iterrows():
+        if (
+            isinstance(row[0], str)
+            and row[0].isupper()
+            and row[0] not in ["Kelurahan", "derajat keanggotaan", "derajat nonkeanggotaan"]
+        ):
+            current_kabupaten = row[0].strip()
+
+        elif (
+            current_kabupaten == target_kabupaten
+            and pd.notna(row[0])
+            and row[0] != "Kelurahan"
+        ):
+            kelurahan_list.append(row[0])
+
+
     df = pd.read_excel(path, sheet_name=sheet_name, header=None)
     header_row1 = df.iloc[0].ffill()
     header_row2 = df.iloc[1].fillna("")
@@ -520,16 +559,18 @@ def load_kriteria_data(path, sheet_name):
     tuples = list(zip(header_row1, header_row2))
     df.columns = pd.MultiIndex.from_tuples(tuples)
     df = df.iloc[2:].reset_index(drop=True)
+
+    print(kelurahan_list)
     
     result = {}
     for _, row in df.iterrows():
         key = row[("KRITERIA", "")]
         result[key] = {}
         
-        for M in ["M1", "M2", "M3", "M4", "M5", "M6"]:
-            miu = row[(M, "miu")]
-            v = row[(M, "v")]
-            result[key][M] = {"miu": float(miu), "v": float(v)}
+        for index, M in enumerate(["M1", "M2", "M3", "M4", "M5", "M6"]):
+            derajat_keanggotaan = row[(M, "miu")]
+            derajat_nonkeanggotaan = row[(M, "v")]
+            result[key][kelurahan_list[index]] = {"derajat keanggotaan": float(derajat_keanggotaan), "derajat nonkeanggotaan": float(derajat_nonkeanggotaan)}
     
     return result
 
@@ -541,9 +582,9 @@ def perhitungan_kelurahan(data, kelurahan1, kelurahan2):
     for idx1, row1 in data[kelurahan1.upper()].iterrows():
         list_baris = []
         for idx2, row2 in data[kelurahan2.upper()].iterrows():
-            miu = abs(row1["miu"] - row2["miu"])
-            v = abs(row1["v"] - row2["v"])
-            hasil = miu + v
+            derajat_keanggotaan = abs(row1["derajat keanggotaan"] - row2["derajat keanggotaan"])
+            derajat_nonkeanggotaan = abs(row1["derajat nonkeanggotaan"] - row2["derajat nonkeanggotaan"])
+            hasil = derajat_keanggotaan + derajat_nonkeanggotaan
             list_baris.append(hasil)
             
             if f'{idx2}' not in kolom:
@@ -559,8 +600,8 @@ def perhitungan_kelurahan(data, kelurahan1, kelurahan2):
 
 def perhitungan_kriteria(dataA, dataB):
     """Calculate kriteria distance"""
-    gabungan_miu = {}
-    gabungan_v = {}
+    gabungan_derajat_keanggotaan = {}
+    gabungan_derajat_nonkeanggotaan = {}
 
     kelurahan = len(dataA['x1'])
     kriteria = len(dataA)
@@ -568,27 +609,27 @@ def perhitungan_kriteria(dataA, dataB):
     for i, valuesA in dataA.items():
         for j, valuesA_M in valuesA.items():
             for h in range(len(valuesA)):
-                miu = abs(valuesA_M['miu'] - dataB[i][f'M{h+1}']['miu'])
-                v = abs(valuesA_M['v'] - dataB[i][f'M{h+1}']['v'])
+                derajat_keanggotaan = abs(valuesA_M['derajat keanggotaan'] - dataB[i][f'M{h+1}']['derajat keanggotaan'])
+                derajat_nonkeanggotaan = abs(valuesA_M['derajat nonkeanggotaan'] - dataB[i][f'M{h+1}']['derajat nonkeanggotaan'])
                 key = f'{j[1:]}|{h+1}'
                 
-                if key not in gabungan_miu:
-                    gabungan_miu[key] = []
-                    gabungan_v[key] = []
+                if key not in gabungan_derajat_keanggotaan:
+                    gabungan_derajat_keanggotaan[key] = []
+                    gabungan_derajat_nonkeanggotaan[key] = []
                 
-                gabungan_miu[key].append(miu)
-                gabungan_v[key].append(v)
+                gabungan_derajat_keanggotaan[key].append(derajat_keanggotaan)
+                gabungan_derajat_nonkeanggotaan[key].append(derajat_nonkeanggotaan)
     
-    ukuran = int(np.sqrt(len(gabungan_miu)))
+    ukuran = int(np.sqrt(len(gabungan_derajat_keanggotaan)))
     baris = {}
     kolom = {}
     
     for i in range(ukuran):
         for j in range(ukuran):
             key = f'{i+1}|{j+1}'
-            miu_sum = sum(gabungan_miu[key])
-            v_sum = sum(gabungan_v[key])
-            hasil = (1 / kriteria) * (miu_sum + v_sum)
+            derajat_keanggotaan_sum = sum(gabungan_derajat_keanggotaan[key])
+            derajat_nonkeanggotaan_sum = sum(gabungan_derajat_nonkeanggotaan[key])
+            hasil = (1 / kriteria) * (derajat_keanggotaan_sum + derajat_nonkeanggotaan_sum)
             
             if i+1 not in baris:
                 baris[i+1] = []
@@ -614,8 +655,8 @@ def perhitungan_kelurahan_custom(data1, data2):
     for a, valuesa in data1.iterrows():
         row_results = []
         for b, valuesb in data2.iterrows():
-            hasil = abs(valuesa['miu Kabupaten 1'] - valuesb["miu Kabupaten 2"]) + \
-                    abs(valuesa["v Kabupaten 1"] - valuesb["v Kabupaten 2"])
+            hasil = abs(valuesa['derajat keanggotaan Kabupaten 1'] - valuesb["derajat keanggotaan Kabupaten 2"]) + \
+                    abs(valuesa["derajat nonkeanggotaan Kabupaten 1"] - valuesb["derajat nonkeanggotaan Kabupaten 2"])
             row_results.append(hasil)
             
             if b not in kolom:
@@ -631,8 +672,8 @@ def perhitungan_kelurahan_custom(data1, data2):
 
 def perhitungan_kriteria_custom(dataA, dataB, kelurahan, kriteria):
     """Calculate custom kriteria distance"""
-    gabungan_miu = {}
-    gabungan_v = {}
+    gabungan_derajat_keanggotaan = {}
+    gabungan_derajat_nonkeanggotaan = {}
 
     for i, valuesA in dataA.iterrows():
         for j, valuesA_M in valuesA.items():
@@ -640,25 +681,25 @@ def perhitungan_kriteria_custom(dataA, dataB, kelurahan, kriteria):
                 hasil = abs(valuesA_M - dataB.loc[i, f"{j.split(' ')[0]} M{h+1}"])
                 key = f"{j.split(' ')[1]}|{h+1}"
                 
-                if j.split(" ")[0] == "miu":
-                    if key not in gabungan_miu:
-                        gabungan_miu[key] = []
-                    gabungan_miu[key].append(hasil)
+                if j.split(" ")[0] == "derajat keanggotaan":
+                    if key not in gabungan_derajat_keanggotaan:
+                        gabungan_derajat_keanggotaan[key] = []
+                    gabungan_derajat_keanggotaan[key].append(hasil)
                 else:
-                    if key not in gabungan_v:
-                        gabungan_v[key] = []
-                    gabungan_v[key].append(hasil)
+                    if key not in gabungan_derajat_nonkeanggotaan:
+                        gabungan_derajat_nonkeanggotaan[key] = []
+                    gabungan_derajat_nonkeanggotaan[key].append(hasil)
     
-    ukuran = int(np.sqrt(len(gabungan_miu)))
+    ukuran = int(np.sqrt(len(gabungan_derajat_keanggotaan)))
     baris = {}
     kolom = {}
     
     for i in range(ukuran):
         for j in range(ukuran):
             key = f'M{i+1}|{j+1}'
-            miu_sum = sum(gabungan_miu[key])
-            v_sum = sum(gabungan_v[key])
-            hasil = (1 / kriteria) * (miu_sum + v_sum)
+            derajat_keanggotaan_sum = sum(gabungan_derajat_keanggotaan[key])
+            derajat_nonkeanggotaan = sum(gabungan_derajat_nonkeanggotaan[key])
+            hasil = (1 / kriteria) * (derajat_keanggotaan_sum + derajat_nonkeanggotaan)
             
             if i+1 not in baris:
                 baris[i+1] = []
@@ -985,11 +1026,18 @@ elif st.session_state.page == "excel":
                 with col1:
                     st.markdown("<br>", unsafe_allow_html=True)
                     data = load_kabupaten_data(uploaded_file, "konv kelurahan")
-                    st.dataframe(data[st.session_state.kabupaten1.upper()], use_container_width=True)
+                    df = data[st.session_state.kabupaten1.upper()].reset_index(drop=True)
+                    df.index = df.index + 1
+                    df.index.name = "No"
+                    st.dataframe(df, use_container_width=True)
                 with col2:
                     st.markdown("<br>", unsafe_allow_html=True)
                     data = load_kabupaten_data(uploaded_file, "konv kelurahan")
-                    st.dataframe(data[st.session_state.kabupaten2.upper()], use_container_width=True)
+                    df = data[st.session_state.kabupaten2.upper()].reset_index(drop=True)
+                    df.index = df.index + 1
+                    df.index.name = "No"
+
+                    st.dataframe(df, use_container_width=True)
                 
             with tab2:
                 konv_map = {
@@ -1009,7 +1057,7 @@ elif st.session_state.page == "excel":
                     st.markdown("<br>", unsafe_allow_html=True)
                     konv_kab2 = konv_map[st.session_state.kabupaten2]
                     data2 = load_kriteria_data(uploaded_file, konv_kab2)
-                    data_tampil2 = dict_kriteria_to_multiindex_df(data2)
+                    data_tampil2 = dict_kriteria_to_multiindex_df(data2, "kanan")
                     st.dataframe(data_tampil2, use_container_width=True)
 
             st.markdown("<br>", unsafe_allow_html=True)
@@ -1168,32 +1216,32 @@ elif st.session_state.page == "custom":
     # Dataset A - Kelurahan
     df_A1 = pd.DataFrame(
         np.zeros((kelurahan, 2)),
-        columns=["miu Kabupaten 1", "v Kabupaten 1"],
-        index=[f"A{i+1}" for i in range(kelurahan)]
+        columns=["derajat keanggotaan Kabupaten 1", "derajat nonkeanggotaan Kabupaten 1"],
+        index=[f"M{i+1}" for i in range(kelurahan)]
     )
 
     df_A2 = pd.DataFrame(
         np.zeros((kelurahan, 2)),
-        columns=["miu Kabupaten 2", "v Kabupaten 2"],
+        columns=["derajat keanggotaan Kabupaten 2", "derajat nonkeanggotaan Kabupaten 2"],
         index=[f"M{i+1}" for i in range(kelurahan)]
     )
     
     # Dataset B - Kabupaten 1
     kolom_B = []
     for i in range(kelurahan):
-        kolom_B.extend([f"miu M{i+1}", f"v M{i+1}"])
+        kolom_B.extend([f"derajat keanggotaan M{i+1}", f"derajat nonkeanggotaan M{i+1}"])
     
     df_B = pd.DataFrame(
         np.zeros((kriteria, kelurahan * 2)),
         columns=kolom_B,
-        index=[f"X{i+1}" for i in range(kriteria)]
+        index=[f"x{i+1}" for i in range(kriteria)]
     )
     
     # Dataset C - Kabupaten 2
     df_C = pd.DataFrame(
         np.zeros((kriteria, kelurahan * 2), dtype=float),
         columns=kolom_B,
-        index=[f"X{i+1}" for i in range(kriteria)]
+        index=[f"b{i+1}" for i in range(kriteria)]
     )
     
     column_config = {
