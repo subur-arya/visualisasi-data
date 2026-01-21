@@ -1221,13 +1221,13 @@ elif st.session_state.page == "custom":
     df_A1 = pd.DataFrame(
         np.zeros((kelurahan, 2)),
         columns=["derajat keanggotaan Kabupaten 1", "derajat nonkeanggotaan Kabupaten 1"],
-        index=[f"M{i+1}" for i in range(kelurahan)]
+        index=[f"A{i+1}" for i in range(kelurahan)]
     )
 
     df_A2 = pd.DataFrame(
         np.zeros((kelurahan, 2)),
         columns=["derajat keanggotaan Kabupaten 2", "derajat nonkeanggotaan Kabupaten 2"],
-        index=[f"M{i+1}" for i in range(kelurahan)]
+        index=[f"B{i+1}" for i in range(kelurahan)]
     )
     
     # Dataset B - Kabupaten 1
@@ -1238,7 +1238,7 @@ elif st.session_state.page == "custom":
     df_B = pd.DataFrame(
         np.zeros((kriteria, kelurahan * 2)),
         columns=kolom_B,
-        index=[f"x{i+1}" for i in range(kriteria)]
+        index=[f"a{i+1}" for i in range(kriteria)]
     )
     
     # Dataset C - Kabupaten 2
