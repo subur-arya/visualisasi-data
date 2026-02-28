@@ -1,0 +1,7 @@
+    derajat keanggotaan A1  derajat nonkeanggotaan A1  ...  derajat keanggotaan A3  derajat nonkeanggotaan A3
+x1                     0.0                        0.0  ...                     0.0                        0.0
+x2                     0.0                        0.0  ...                     0.0                        0.0
+x3                     0.0                        0.0  ...                     0.0                        0.0
+x4                     0.0                        0.0  ...                     0.0                        0.0
+
+[4 rows x 6 columns]

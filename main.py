@@ -627,6 +627,8 @@ def perhitungan_kriteria(dataA, dataB):
                 gabungan_derajat_nonkeanggotaan[key].append(derajat_nonkeanggotaan)
     baris = {}
     kolom = {}
+    print("gabungan_derajat_keanggotaan : ", gabungan_derajat_keanggotaan)
+    print("gabungan_derajat_nonkeanggotaan : ", gabungan_derajat_nonkeanggotaan)
     
     for i in list_kelurahan_a:
         for j in list_kelurahan_b:
@@ -674,52 +676,195 @@ def perhitungan_kelurahan_custom(data1, data2):
     
     return (1 / 4.6) * (min_a + min_b)
 
-def perhitungan_kriteria_custom(dataA, dataB, kelurahan, kriteria):
-    """Calculate custom kriteria distance"""
-    gabungan_derajat_keanggotaan = {}
-    gabungan_derajat_nonkeanggotaan = {}
+def hitung(dataA, dataB, kriteria, kelurahan):
 
-    for i, valuesA in dataA.iterrows():
-        for j, valuesA_M in valuesA.items():
-            for h in range(len(valuesA)):
-                hasil = abs(valuesA_M - dataB.loc[f"b{h+1}", f"{j}"])
-                key = f"{j}|{h+1}"
+    kolom_keanggotaan_A = [c for c in dataA.columns 
+                           if "keanggotaan" in c and "non" not in c]
+
+    kolom_keanggotaan_B = [c for c in dataB.columns 
+                           if "keanggotaan" in c and "non" not in c]
+
+    kolom_non_A = [c for c in dataA.columns 
+                   if "nonkeanggotaan" in c]
+
+    kolom_non_B = [c for c in dataB.columns 
+                   if "nonkeanggotaan" in c]
+
+    keanggotaan_selisih = []
+    nonkeanggotaan_selisih = []
+
+    for colA in kolom_keanggotaan_A:
+        for colB in kolom_keanggotaan_B:
+            selisih = sum(abs(dataA[colA].values - dataB[colB].values))
+            keanggotaan_selisih.append(selisih)
+
+    for colA in kolom_non_A:
+        for colB in kolom_non_B:
+            selisih = sum(abs(dataA[colA].values - dataB[colB].values))
+            nonkeanggotaan_selisih.append(selisih)
+
+    sum_tiap_m = [
+        (keanggotaan_selisih[i] + nonkeanggotaan_selisih[i]) / kriteria
+        for i in range(len(keanggotaan_selisih))
+    ]
+
+    min_per_kelurahan = [
+        min(sum_tiap_m[i:i+kelurahan])
+        for i in range(0, len(sum_tiap_m), kelurahan)
+    ]
+
+    return sum(min_per_kelurahan)
+
+    
+def perhitungan_kriteria_custom(dataA, dataB, kelurahan, kriteria):
+    # Versi asli
+    hasil1 = hitung(dataA, dataB, kriteria, kelurahan)
+
+    # Versi ditukar
+    hasil2 = hitung(dataB, dataA, kriteria, kelurahan)
+
+    return ((hasil1 + hasil2)/(4*kelurahan))
+
+
+
+
+# def perhitungan_kriteria_custom(dataA, dataB, kelurahan, kriteria):
+#     kolom_keanggotaan = [c for c in dataA.columns 
+#                         if "keanggotaan" in c and "non" not in c]
+
+#     kolom_nonkeanggotaan = [c for c in dataA.columns 
+#                         if "nonkeanggotaan" in c]
+    
+#     hasil_keanggotaan = []
+#     keanggotaan_selisih = []
+#     nonkeanggotaan_selisih = []
+#     for colA in kolom_keanggotaan:
+#         for colB in kolom_keanggotaan:   # tetap jenis yang sama
+#             selisih = []
+#             for k in range(len(dataA.index)):
+#                 # print(f"abs({dataA.loc[dataA.index[k], colA]} - {dataB.loc[dataB.index[k], colB]})")
+#                 # print(f"{abs(dataA.loc[dataA.index[k], colA] - dataB.loc[dataB.index[k], colB])}")
+#                 selisih.append(abs(dataA.loc[dataA.index[k], colA] - dataB.loc[dataB.index[k], colB]))
+#             keanggotaan_selisih.append(sum(selisih))
+#     for colA in kolom_nonkeanggotaan:
+#         for colB in kolom_nonkeanggotaan:   # tetap jenis yang sama
+#             selisih = []
+#             for k in range(len(dataA.index)):
+#                 selisih.append(abs(dataA.loc[dataA.index[k], colA] - dataB.loc[dataB.index[k], colB]))
+#             nonkeanggotaan_selisih.append(sum(selisih))
+
+#     # print("niali Keanggotaan : ", keanggotaan_selisih)
+#     # print("niali nonKeanggotaan : ", nonkeanggotaan_selisih)
+
+#     sum_tiap_m = []
+#     for i in range(len(keanggotaan_selisih)):
+#         sum_tiap_m.append((keanggotaan_selisih[i] + nonkeanggotaan_selisih[i])/kriteria)
+    
+#     # print(sum_tiap_m)
+
+#     min_per_kelurahan = []
+#     for i in range(0, len(sum_tiap_m), kelurahan):
+#         blok = sum_tiap_m[i:i+kelurahan]
+#         min_per_kelurahan.append(min(blok))
+
+#     print(min_per_kelurahan)
+
+#     total = sum(min_per_kelurahan)
+#     print(total)
+    
+#     return total
+
+
+
+
+    # hasil = []
+
+    # for j in range(len(dataA.columns)):      # indeks kolom
+    #     for i in range(len(dataB.columns)):    # indeks kolom
+    #         selisih = []
+    #         for k in range(len(dataA.index))    # indeks baris
+    #             selisih.appned(abs(dataA.iloc[k, j] - dataB.iloc[k, i]))
+    #             # hasil.append(selisih)
+    #         sum(selisih)
+
+    # print(hasil)
+
+# def perhitungan_kriteria_custom(dataA, dataB, kelurahan, kriteria):
+#     """Calculate custom kriteria distance"""
+#     gabungan_derajat_keanggotaan = {}
+#     gabungan_derajat_nonkeanggotaan = {}
+
+#     for i, valuesA in dataA.iterrows():
+#         for j, valuesA_M in valuesA.items():
+#             for h in range(int(len(valuesA)/2)):
+#                 # print(f"b{h+1}")
+#                 # print("j:", f"{j.split(" ")[-1]}|{h+1}")
+#                 # print(type(dataB))
+#                 # print(valuesA_M)
+#                 # print(len(valuesA))
+#                 # # print(valuesA.items())
+#                 # for a,b in valuesA.items():
+#                 #     print("a:", a)
+#                 #     print("b:", b)
+#                 # print("\n\n\n\n")
+#                 # if "derajat keanggotaan" in j: h += 0
+#                 # else: h += 1
+#                 # print("value A:")
+#                 # print(print(list(valuesA.items())))
+#                 # print(f"Row: b{h+1}, Column: {j}, Value: {dataB.loc[f'b{h+1}', j]}")
+#                 hasil = abs(valuesA_M - dataB.loc[f"b{h+1}", f"{j}"])
+#                 # if 
+#                 # key = f"{j.split(" ")[-1]}|{h+1}"
+#                 key = f'{j.split(" ")[-1]}|{h*2+1}'
+#                 key_non = f'{j.split(" ")[-1]}|{(h+1)*2}'
+#                 # print("key:", key)
+#                 # print("hasil:", hasil)
                 
-                if j == "derajat keanggotaan":
-                    if key not in gabungan_derajat_keanggotaan:
-                        gabungan_derajat_keanggotaan[key] = []
-                    gabungan_derajat_keanggotaan[key].append(hasil)
-                else:
-                    if key not in gabungan_derajat_nonkeanggotaan:
-                        gabungan_derajat_nonkeanggotaan[key] = []
-                    gabungan_derajat_nonkeanggotaan[key].append(hasil)
+#                 if "derajat keanggotaan" in j:
+#                     if key not in gabungan_derajat_keanggotaan:
+#                         gabungan_derajat_keanggotaan[key] = []
+#                     gabungan_derajat_keanggotaan[key].append(hasil)
+#                 else:
+#                     if key_non not in gabungan_derajat_nonkeanggotaan:
+#                         gabungan_derajat_nonkeanggotaan[key_non] = []
+#                     gabungan_derajat_nonkeanggotaan[key_non].append(hasil)
+                
     
-    ukuran = int(np.sqrt(len(gabungan_derajat_keanggotaan)))
-    baris = {}
-    kolom = {}
+#     ukuran = int(np.sqrt(len(gabungan_derajat_keanggotaan)))
+#     baris = {}
+#     kolom = {}
+#     # print("gabungan_derajat_keanggotaan : ", gabungan_derajat_keanggotaan)
+#     # print("gabungan_derajat_nonkeanggotaan : ", gabungan_derajat_nonkeanggotaan)
+#     # print("ukuran:", ukuran)
     
-    for i in range(ukuran):
-        for j in range(ukuran):
-            key = f'M{i+1}|{j+1}'
-            derajat_keanggotaan_sum = sum(gabungan_derajat_keanggotaan[key])
-            derajat_nonkeanggotaan = sum(gabungan_derajat_nonkeanggotaan[key])
-            hasil = (1 / kriteria) * (derajat_keanggotaan_sum + derajat_nonkeanggotaan)
+#     for i in range(ukuran):
+#         for j in range(ukuran):
+#             key = f'M{i+1}|{j*2+1}'
+#             key_non = f'M{i+1}|{(j+1)*2}'
+#             derajat_keanggotaan_sum = sum(gabungan_derajat_keanggotaan[key])
+#             derajat_nonkeanggotaan = sum(gabungan_derajat_nonkeanggotaan[key_non])
+#             hasil = (1 / kriteria) * (derajat_keanggotaan_sum + derajat_nonkeanggotaan)
+#             print("hasil")
+#             print(hasil)
             
-            if i+1 not in baris:
-                baris[i+1] = []
-            if j+1 not in kolom:
-                kolom[j+1] = []
+#             if i+1 not in baris:
+#                 baris[i+1] = []
+#             if j+1 not in kolom:
+#                 kolom[j+1] = []
             
-            baris[i+1].append(hasil)
-            kolom[j+1].append(hasil)
+#             baris[i+1].append(hasil)
+#             kolom[j+1].append(hasil)
+
+#     print(baris)
+#     print(kolom)
     
-    min_baris = [min(baris[i+1]) for i in range(ukuran)]
-    min_kolom = [min(kolom[j+1]) for j in range(ukuran)]
+#     min_baris = [min(baris[i+1]) for i in range(ukuran)]
+#     min_kolom = [min(kolom[j+1]) for j in range(ukuran)]
     
-    hasil1 = sum(min_baris)
-    hasil2 = sum(min_kolom)
+#     hasil1 = sum(min_baris)
+#     hasil2 = sum(min_kolom)
     
-    return (1 / (4 * kelurahan)) * (hasil1 + hasil2)
+#     return (1 / (4 * kelurahan)) * (hasil1 + hasil2)
 
 def render_dark_dataframe(df, show_index=True, index_width="auto"):
     """Render DataFrame sebagai HTML table dengan dark theme"""
@@ -1088,6 +1233,12 @@ elif st.session_state.page == "excel":
                 hasil2 = perhitungan_kriteria(dataA, dataB)
                 hasil3 = (1 / 2) * (hasil1 + hasil2)
                 hasil4 = 1 - hasil3
+
+                # print("\n\n\n\n\n\n excel")
+                # print("hasil1:", hasil1)
+                # print("hasil2:", hasil2)
+                # print("hasil3:", hasil3)
+                # print("hasil4:", hasil4)
                 
                 st.markdown(f"""
                     <div style="
@@ -1233,19 +1384,24 @@ elif st.session_state.page == "custom":
     # Dataset B - Kabupaten 1
     kolom_B = []
     for i in range(kelurahan):
-        kolom_B.extend([f"derajat keanggotaan M{i+1}", f"derajat nonkeanggotaan M{i+1}"])
+        kolom_B.extend([f"derajat keanggotaan A{i+1}", f"derajat nonkeanggotaan A{i+1}"])
     
     df_B = pd.DataFrame(
         np.zeros((kriteria, kelurahan * 2)),
         columns=kolom_B,
-        index=[f"a{i+1}" for i in range(kriteria)]
+        index=[f"x{i+1}" for i in range(kriteria)]
     )
     
+    # Dataset d - Kabupaten 2
+    kolom_B = []
+    for i in range(kelurahan):
+        kolom_B.extend([f"derajat keanggotaan B{i+1}", f"derajat nonkeanggotaan B{i+1}"])
+
     # Dataset C - Kabupaten 2
     df_C = pd.DataFrame(
         np.zeros((kriteria, kelurahan * 2), dtype=float),
         columns=kolom_B,
-        index=[f"b{i+1}" for i in range(kriteria)]
+        index=[f"x{i+1}" for i in range(kriteria)]
     )
     
     column_config = {
@@ -1295,10 +1451,24 @@ elif st.session_state.page == "custom":
     st.markdown("<br>", unsafe_allow_html=True)
     
     if st.button("Hitung dengan Rumus", use_container_width=True):
+        with open("data1.txt", "w") as f:
+            f.write(str(edited_data_B))
+        with open("data2.txt", "w") as f:
+            f.write(str(edited_data_C))
+        with open("kelurahan.txt", "w") as f:
+            f.write(str(kelurahan))
+        with open("kriteria.txt", "w") as f:
+            f.write(str(kriteria))
         hasil1 = perhitungan_kelurahan_custom(edited_data_A1, edited_data_A2)
         hasil2 = perhitungan_kriteria_custom(edited_data_B, edited_data_C, kelurahan, kriteria)
         hasil3 = (1 / 2) * (hasil1 + hasil2)
         hasil4 = 1 - hasil3
+
+        # print("\n\n\n\n\n custom")
+        # print("hasil1:", hasil1)
+        # print("hasil2:", hasil2)
+        # print("hasil3:", hasil3)
+        # print("hasil4:", hasil4)
         
         st.markdown("<br>", unsafe_allow_html=True)
         
